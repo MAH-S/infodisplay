@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { Card, List, Typography, Row, Col, Table, ConfigProvider } from "antd";
+import "antd/dist/reset.css";
+import { theme } from "antd";
+import "./Dashboard.css";
+
+const { Title, Text } = Typography;
 
 function Dashboard() {
   const [time, setTime] = useState("");
@@ -8,6 +14,7 @@ function Dashboard() {
   const [stocks, setStocks] = useState([]);
   const [traffic, setTraffic] = useState("");
   const [events, setEvents] = useState([]);
+  const [appointments, setAppointments] = useState([]);
 
   // useEffect for Time Update
   useEffect(() => {
@@ -15,7 +22,6 @@ function Dashboard() {
       axios
         .get("http://localhost:5050/api/time")
         .then((res) => {
-          console.log("Time Response:", res.data);
           setTime(res.data.currentTime);
         })
         .catch((error) => {
@@ -31,12 +37,11 @@ function Dashboard() {
     return () => clearInterval(timeInterval);
   }, []);
 
-  // useEffect for Weather, Prayer Times, Traffic, Events
+  // useEffect for Weather, Prayer Times, Traffic, Events, and Appointments
   useEffect(() => {
     axios
       .get("http://localhost:5050/api/weather")
       .then((res) => {
-        console.log("Weather Response:", res.data);
         setWeather(res.data);
       })
       .catch((error) => {
@@ -46,7 +51,6 @@ function Dashboard() {
     axios
       .get("http://localhost:5050/api/prayer-times")
       .then((res) => {
-        console.log("Prayer Times Response:", res.data);
         setPrayerTimes(res.data);
       })
       .catch((error) => {
@@ -56,7 +60,6 @@ function Dashboard() {
     axios
       .get("http://localhost:5050/api/traffic")
       .then((res) => {
-        console.log("Traffic Response:", res.data);
         setTraffic(res.data.trafficStatus);
       })
       .catch((error) => {
@@ -66,107 +69,302 @@ function Dashboard() {
     axios
       .get("http://localhost:5050/api/events")
       .then((res) => {
-        console.log("Events Response:", res.data);
         setEvents(res.data);
       })
       .catch((error) => {
         console.error("Error fetching events:", error);
       });
+
+    axios
+      .get("http://localhost:5050/api/appointments")
+      .then((res) => {
+        setAppointments(res.data);
+      })
+      .catch((error) => {
+        console.error("Error fetching appointments:", error);
+      });
   }, []);
 
   // useEffect for Stocks Update
   useEffect(() => {
-    const fetchStockData = () => {
-      // Fetch stock data
-      axios
-        .get("http://localhost:5050/api/us-stocks")
-        .then((res) => {
-          setStocks([{ market: res.data.symbol, value: res.data.price }]);
-        })
-        .catch((error) => {
-          console.error("Error fetching US stock data:", error);
-        });
+    const fetchStockData = async () => {
+      try {
+        const stockResponse = await axios.get(
+          "http://localhost:5050/api/stocks"
+        );
+        const goldResponse = await axios.get(
+          "http://localhost:5050/api/gold-price"
+        );
 
-      // Fetch gold price data
-      axios
-        .get("http://localhost:5050/api/gold-price")
-        .then((res) => {
-          setStocks((prevStocks) => [
-            ...prevStocks,
-            { market: "Gold (XAU)", value: res.data.goldPrice },
-          ]);
-        })
-        .catch((error) => {
-          console.error("Error fetching gold price:", error);
-        });
+        const stockData = stockResponse.data.map((stock) => ({
+          market: stock.symbol,
+          value: stock.price,
+        }));
+
+        const goldPriceData = {
+          market: "Gold (XAU)",
+          value: goldResponse.data.goldPrice,
+        };
+
+        setStocks([
+          ...stockData.filter((stock) => stock.market !== "Gold (XAU)"),
+          goldPriceData,
+        ]);
+      } catch (error) {
+        if (error.response && error.response.status === 429) {
+          console.error("Rate limit exceeded:", error);
+        } else {
+          console.error("Error fetching stock data:", error);
+        }
+      }
     };
 
     fetchStockData(); // Initial fetch of stocks
-    const stockInterval = setInterval(fetchStockData, 60000); // Update stock data every 60 seconds
+    const stockInterval = setInterval(fetchStockData, 15 * 60 * 1000); // Update stock data every 15 minutes
 
     // Clean up stock interval on component unmount
     return () => clearInterval(stockInterval);
   }, []);
 
-  return (
-    <div>
-      <h1>InfoDisplay Dashboard</h1>
-      <p>Current Time: {time || "Loading..."}</p>
-      {weather ? (
-        <p>
-          Weather: {weather.description}, Temperature: {weather.temperature}°C
-        </p>
-      ) : (
-        <p>Loading weather...</p>
-      )}
-      {prayerTimes ? (
-        <div>
-          <h3>Prayer Times:</h3>
-          <p>Fajr: {convertTo12HourFormat(prayerTimes.Fajr)}</p>
-          <p>Dhuhr: {convertTo12HourFormat(prayerTimes.Dhuhr)}</p>
-          <p>Asr: {convertTo12HourFormat(prayerTimes.Asr)}</p>
-          <p>Maghrib: {convertTo12HourFormat(prayerTimes.Maghrib)}</p>
-          <p>Isha: {convertTo12HourFormat(prayerTimes.Isha)}</p>
-        </div>
-      ) : (
-        <p>Loading prayer times...</p>
-      )}
-      <h3>Stock Market Data:</h3>
-      {stocks.length > 0 ? (
-        <ul>
-          {stocks.map((stock, index) => (
-            <li key={index}>
-              {stock.market}: {stock.value}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p>Loading stock market data...</p>
-      )}
-      <p>Traffic Status: {traffic || "Loading..."}</p>
-      <h3>Appointments and Events:</h3>
-      {events.length > 0 ? (
-        <ul>
-          {events.map((event, index) => (
-            <li key={index}>
-              {event.title} at {event.time}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p>Loading appointments and events...</p>
-      )}
-    </div>
-  );
-
-  // Helper function to convert 24-hour format to 12-hour format
-  function convertTo12HourFormat(time24) {
+  const convertTo12HourFormat = (time24) => {
     const [hours, minutes] = time24.split(":");
     const hour = parseInt(hours);
     const period = hour >= 12 ? "PM" : "AM";
     const hour12 = hour % 12 || 12; // Convert 0 to 12 for midnight
     return `${hour12}:${minutes} ${period}`;
-  }
+  };
+
+  const prayerColumns = [
+    {
+      title: "الوقت",
+      dataIndex: "time",
+      key: "time",
+      render: (text, record, index) => {
+        const isNextPrayer = index === nextPrayerIndex;
+        return (
+          <span style={{ color: isNextPrayer ? "#90EE90" : "#ffffff" }}>
+            {convertTo12HourFormat(text)}
+          </span>
+        );
+      },
+    },
+    {
+      title: "الصلاة",
+      dataIndex: "name",
+      key: "name",
+      render: (text, record, index) => {
+        const isNextPrayer = index === nextPrayerIndex;
+        return (
+          <span style={{ color: isNextPrayer ? "#90EE90" : "#ffffff" }}>
+            {text}
+          </span>
+        );
+      },
+    },
+  ];
+
+  const prayerData = prayerTimes
+    ? [
+        { key: "1", name: "الفجر", time: prayerTimes.Fajr },
+        { key: "2", name: "الظهر", time: prayerTimes.Dhuhr },
+        { key: "3", name: "العصر", time: prayerTimes.Asr },
+        { key: "4", name: "المغرب", time: prayerTimes.Maghrib },
+        { key: "5", name: "العشاء", time: prayerTimes.Isha },
+      ]
+    : [];
+
+  const currentTime = new Date();
+  const nextPrayerIndex = prayerData.findIndex((prayer) => {
+    const [hours, minutes] = prayer.time.split(":");
+    const prayerTime = new Date();
+    prayerTime.setHours(parseInt(hours, 10));
+    prayerTime.setMinutes(parseInt(minutes, 10));
+    prayerTime.setSeconds(0);
+    return prayerTime > currentTime;
+  });
+
+  return (
+    <ConfigProvider theme={{ algorithm: theme.darkAlgorithm }}>
+      <div
+        style={{
+          padding: "40px",
+          backgroundColor: "#141414",
+          color: "#ffffff",
+          minHeight: "100vh",
+        }}
+      >
+        <Row gutter={[24, 24]} justify="space-between">
+          <Col span={6}>
+            <Card
+              bordered={true}
+              style={{ backgroundColor: "#1f1f1f", textAlign: "center" }}
+            >
+              <Text style={{ color: "#ffffff", fontSize: "24px" }}>
+                {time || "Loading..."}
+              </Text>
+            </Card>
+          </Col>
+          <Col span={6}>
+            <Card bordered={true} style={{ backgroundColor: "#1f1f1f" }}>
+              <Title level={3} style={{ color: "#ffffff", fontSize: "24px" }}>
+                Digital Oppression
+              </Title>
+            </Card>
+          </Col>
+          <Col span={6}>
+            <Card bordered={true} style={{ backgroundColor: "#1f1f1f" }}>
+              {weather ? (
+                <Text style={{ color: "#ffffff", fontSize: "18px" }}>
+                  {weather.description}, Temperature: {weather.temperature}°C
+                </Text>
+              ) : (
+                <Text style={{ color: "#ffffff", fontSize: "18px" }}>
+                  Loading weather...
+                </Text>
+              )}
+            </Card>
+          </Col>
+        </Row>
+        <Row gutter={[24, 24]} style={{ marginTop: "20px" }}>
+          <Col span={6}>
+            <Card bordered={true} style={{ backgroundColor: "#1f1f1f" }}>
+              <Title level={3} style={{ color: "#ffffff", fontSize: "24px" }}>
+                Stock Market Data
+              </Title>
+              {stocks.length > 0 ? (
+                <List
+                  dataSource={stocks}
+                  renderItem={(stock) => (
+                    <List.Item>
+                      <Text style={{ color: "#ffffff", fontSize: "18px" }}>
+                        {stock.market}: {stock.value}
+                      </Text>
+                    </List.Item>
+                  )}
+                />
+              ) : (
+                <Text style={{ color: "#ffffff", fontSize: "18px" }}>
+                  Loading stock market data...
+                </Text>
+              )}
+            </Card>
+          </Col>
+          <Col span={12}>
+            <Card bordered={true} style={{ backgroundColor: "#1f1f1f" }}>
+              <Title level={3} style={{ color: "#ffffff", fontSize: "24px" }}>
+                Appointments and Events
+              </Title>
+              {events.length > 0 ? (
+                <List
+                  dataSource={events}
+                  renderItem={(event) => (
+                    <List.Item>
+                      <Text style={{ color: "#ffffff", fontSize: "18px" }}>
+                        {event.title} at {event.time}
+                      </Text>
+                    </List.Item>
+                  )}
+                />
+              ) : (
+                <Text style={{ color: "#ffffff", fontSize: "18px" }}>
+                  Loading appointments and events...
+                </Text>
+              )}
+            </Card>
+          </Col>
+          <Col span={6}>
+            <Card bordered={true} style={{ backgroundColor: "#1f1f1f" }}>
+              <Title
+                level={3}
+                style={{
+                  textAlign: "right",
+                  color: "#ffffff",
+                  fontSize: "24px",
+                }}
+              >
+                مواقيت الصلاة
+              </Title>
+              {prayerTimes ? (
+                <Table
+                  columns={prayerColumns}
+                  dataSource={prayerData.map((prayer, index) => ({
+                    ...prayer,
+                    className: index === nextPrayerIndex ? "highlight-row" : "",
+                  }))}
+                  pagination={false}
+                  showHeader={false}
+                  rowClassName={(record) => record.className}
+                  style={{ color: "#ffffff" }}
+                />
+              ) : (
+                <Text style={{ color: "#ffffff", fontSize: "18px" }}>
+                  Loading prayer times...
+                </Text>
+              )}
+            </Card>
+          </Col>
+        </Row>
+        <Row gutter={[24, 24]} style={{ marginTop: "20px" }}>
+          <Col span={6}>
+            <Card bordered={true} style={{ backgroundColor: "#1f1f1f" }}>
+              <Title level={3} style={{ color: "#ffffff", fontSize: "24px" }}>
+                Traffic Status
+              </Title>
+              <Text style={{ color: "#ffffff", fontSize: "18px" }}>
+                {traffic || "Loading..."}
+              </Text>
+            </Card>
+          </Col>
+          <Col span={12}>
+            <Card bordered={true} style={{ backgroundColor: "#1f1f1f" }}>
+              <Title level={3} style={{ color: "#ffffff", fontSize: "24px" }}>
+                Appointments and Events
+              </Title>
+              {events.length > 0 ? (
+                <List
+                  dataSource={events}
+                  renderItem={(event) => (
+                    <List.Item>
+                      <Text style={{ color: "#ffffff", fontSize: "18px" }}>
+                        {event.title} at {event.time}
+                      </Text>
+                    </List.Item>
+                  )}
+                />
+              ) : (
+                <Text style={{ color: "#ffffff", fontSize: "18px" }}>
+                  Loading events...
+                </Text>
+              )}
+            </Card>
+          </Col>
+          <Col span={6}>
+            <Card bordered={true} style={{ backgroundColor: "#1f1f1f" }}>
+              <Title level={3} style={{ color: "#ffffff", fontSize: "24px" }}>
+                Appointments
+              </Title>
+              {appointments.length > 0 ? (
+                <List
+                  dataSource={appointments}
+                  renderItem={(appointment) => (
+                    <List.Item>
+                      <Text style={{ color: "#ffffff", fontSize: "18px" }}>
+                        {appointment.title} at {appointment.time}
+                      </Text>
+                    </List.Item>
+                  )}
+                />
+              ) : (
+                <Text style={{ color: "#ffffff", fontSize: "18px" }}>
+                  Loading appointments...
+                </Text>
+              )}
+            </Card>
+          </Col>
+        </Row>
+      </div>
+    </ConfigProvider>
+  );
 }
 
 export default Dashboard;

@@ -29,9 +29,9 @@ app.get("/api/time", (req, res) => {
 // Route to get weather information
 app.get("/api/weather", async (req, res) => {
   try {
-    const apiKey = process.env.WEATHER_API_KEY; // Store your API key in a .env file
-    const latitude = 24.7136; // Latitude for Riyadh
-    const longitude = 46.6753; // Longitude for Riyadh
+    const apiKey = process.env.WEATHER_API_KEY;
+    const latitude = 24.7136;
+    const longitude = 46.6753;
 
     if (!apiKey) {
       console.error("No API key found");
@@ -65,87 +65,113 @@ app.get("/api/prayer-times", async (req, res) => {
         params: {
           city: city,
           country: country,
-          method: 4, // Umm Al-Qura University, Makkah
+          method: 4,
         },
       }
     );
 
     const prayerTimes = response.data.data.timings;
 
-    // Function to convert 24-hour time to 12-hour format
-    const convertTo12Hour = (time24) => {
-      let [hours, minutes] = time24.split(":");
-      hours = parseInt(hours);
-      const period = hours >= 12 ? "PM" : "AM";
-      hours = hours % 12 || 12;
-      return `${hours}:${minutes} ${period}`;
-    };
-
-    // Convert all prayer times to 12-hour format
-    const formattedPrayerTimes = {
-      Fajr: convertTo12Hour(prayerTimes.Fajr),
-      Dhuhr: convertTo12Hour(prayerTimes.Dhuhr),
-      Asr: convertTo12Hour(prayerTimes.Asr),
-      Maghrib: convertTo12Hour(prayerTimes.Maghrib),
-      Isha: convertTo12Hour(prayerTimes.Isha),
-    };
-
-    res.json(formattedPrayerTimes);
+    res.json(prayerTimes);
   } catch (error) {
     res.status(500).json({ error: "Error fetching prayer times" });
   }
 });
 
-// Route to get stock market data
-// Updated fetchStockData to use Polygon.io instead of Alpha Vantage
-useEffect(() => {
-  const fetchStockData = () => {
-    const apiKey = process.env.REACT_APP_POLYGON_API_KEY;
+// Function to convert 24-hour time to 12-hour format
+const convertTo12Hour = (time24) => {
+  let [hours, minutes] = time24.split(":");
+  hours = parseInt(hours);
+  const period = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12 || 12;
+  return `${hours}:${minutes} ${period}`;
+};
 
-    // Fetch stock data using Polygon.io API
-    axios
-      .get(`https://api.polygon.io/v2/aggs/ticker/AAPL/prev?apiKey=${apiKey}`)
-      .then((res) => {
-        if (res.data && res.data.results && res.data.results.length > 0) {
-          const latestData = res.data.results[0];
-          setStocks([{ market: "Apple (AAPL)", value: latestData.c }]); // c stands for close price
-        }
-      })
-      .catch((error) => {
-        console.error("Error fetching US stock data:", error);
-      });
+// Helper function to convert 24-hour format to 12-hour format
+function convertTo12HourFormat(time24) {
+  // Check if time already includes AM or PM
+  if (time24.includes("AM") || time24.includes("PM")) {
+    return time24; // Return as is if it already contains AM/PM
+  }
 
-    // Fetch gold price data
-    axios
-      .get("http://localhost:5050/api/gold-price")
-      .then((res) => {
-        setStocks((prevStocks) => [
-          ...prevStocks,
-          { market: "Gold (XAU)", value: res.data.goldPrice },
-        ]);
-      })
-      .catch((error) => {
-        console.error("Error fetching gold price:", error);
-      });
-  };
+  const [hours, minutes] = time24.split(":");
+  const hour = parseInt(hours);
+  const period = hour >= 12 ? "PM" : "AM";
+  const hour12 = hour % 12 || 12; // Convert 0 to 12 for midnight
+  return `${hour12}:${minutes} ${period}`;
+}
 
-  fetchStockData(); // Initial fetch of stocks
-  const stockInterval = setInterval(fetchStockData, 3600000); // Update stock data every hour
+// Route to get multiple stock market data using Polygon.io API
+app.get("/api/stocks", async (req, res) => {
+  try {
+    const apiKey = process.env.POLYGON_API_KEY;
+    const symbols = ["AAPL", "AMZN", "GOOGL", "MSFT", "NVDA"]; // Stock symbols
 
-  // Clean up stock interval on component unmount
-  return () => clearInterval(stockInterval);
-}, []);
+    if (!apiKey) {
+      console.error("Polygon API key is missing");
+      return res.status(500).json({ error: "Polygon API key is missing" });
+    }
+
+    const stockPromises = symbols.map((symbol) =>
+      axios.get(
+        `https://api.polygon.io/v2/aggs/ticker/${symbol}/prev?apiKey=${apiKey}`
+      )
+    );
+
+    const responses = await Promise.all(stockPromises);
+
+    const stockData = responses.map((response, index) => {
+      if (
+        response.data &&
+        response.data.results &&
+        response.data.results.length > 0
+      ) {
+        const latestData = response.data.results[0];
+        return { symbol: symbols[index], price: latestData.c };
+      } else {
+        throw new Error(`Unexpected response for ${symbols[index]}`);
+      }
+    });
+
+    res.json(stockData);
+  } catch (error) {
+    console.error("Error fetching stock data:", error.message);
+    res.status(500).json({ error: "Error fetching stock data" });
+  }
+});
+
+// Route to get gold price data from GoldAPI.io
+app.get("/api/gold-price", async (req, res) => {
+  try {
+    const apiKey = process.env.GOLD_API_KEY; // Your GoldAPI.io key
+
+    const response = await axios.get("https://www.goldapi.io/api/XAU/USD", {
+      headers: {
+        "x-access-token": apiKey,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (response.data && response.data.price) {
+      res.json({ goldPrice: response.data.price });
+    } else {
+      console.error("Unexpected response from GoldAPI", response.data);
+      res.status(500).json({ error: "Unexpected response from GoldAPI" });
+    }
+  } catch (error) {
+    console.error("Error fetching gold price:", error.message);
+    res.status(500).json({ error: "Error fetching gold price" });
+  }
+});
 
 // Route to get traffic status (example)
 app.get("/api/traffic", (req, res) => {
-  // Placeholder data
   const trafficStatus = "Traffic is smooth in all directions.";
   res.json({ trafficStatus });
 });
 
 // Route to get appointments and events (example)
 app.get("/api/events", (req, res) => {
-  // Placeholder data
   const events = [
     { title: "Team Meeting", time: "10:00 AM" },
     { title: "Doctor's Appointment", time: "2:00 PM" },
