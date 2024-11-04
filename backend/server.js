@@ -5,6 +5,7 @@ const axios = require("axios");
 
 const app = express();
 const PORT = process.env.PORT || 5050;
+const db = require("./dbConnection");
 
 // CORS Middleware with explicit origin
 app.use(
@@ -78,90 +79,133 @@ app.get("/api/prayer-times", async (req, res) => {
   }
 });
 
-// Function to convert 24-hour time to 12-hour format
-const convertTo12Hour = (time24) => {
-  let [hours, minutes] = time24.split(":");
-  hours = parseInt(hours);
-  const period = hours >= 12 ? "PM" : "AM";
-  hours = hours % 12 || 12;
-  return `${hours}:${minutes} ${period}`;
-};
-
-// Helper function to convert 24-hour format to 12-hour format
-function convertTo12HourFormat(time24) {
-  // Check if time already includes AM or PM
-  if (time24.includes("AM") || time24.includes("PM")) {
-    return time24; // Return as is if it already contains AM/PM
-  }
-
-  const [hours, minutes] = time24.split(":");
-  const hour = parseInt(hours);
-  const period = hour >= 12 ? "PM" : "AM";
-  const hour12 = hour % 12 || 12; // Convert 0 to 12 for midnight
-  return `${hour12}:${minutes} ${period}`;
-}
-
-// Route to get multiple stock market data using Polygon.io API
-app.get("/api/stocks", async (req, res) => {
+// Function to fetch and update stock market data using Alpha Vantage API and GoldAPI.io
+const scheduleStockUpdate = async () => {
   try {
-    const apiKey = process.env.POLYGON_API_KEY;
-    const symbols = ["AAPL", "AMZN", "GOOGL", "MSFT", "NVDA"]; // Stock symbols
+    const alphaVantageApiKey = "EHW0JN2MZ865XTJW";
+    const goldApiKey = process.env.GOLD_API_KEY;
 
-    if (!apiKey) {
-      console.error("Polygon API key is missing");
-      return res.status(500).json({ error: "Polygon API key is missing" });
+    const symbolPairs = [
+      ["AAPL", "AMZN"],
+      ["GOOGL", "MSFT"],
+    ];
+
+    if (!goldApiKey) {
+      console.error("Gold API key is missing");
+      return;
     }
 
-    const stockPromises = symbols.map((symbol) =>
-      axios.get(
-        `https://api.polygon.io/v2/aggs/ticker/${symbol}/prev?apiKey=${apiKey}`
-      )
-    );
+    for (const symbols of symbolPairs) {
+      console.log(
+        `Fetching stock data for ${symbols.join(
+          ", "
+        )} from Alpha Vantage API...`
+      );
 
-    const responses = await Promise.all(stockPromises);
+      const stockData = [];
+      for (const symbol of symbols) {
+        try {
+          const response = await axios.get(
+            `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${symbol}&interval=1min&apikey=${alphaVantageApiKey}`
+          );
 
-    const stockData = responses.map((response, index) => {
-      if (
-        response.data &&
-        response.data.results &&
-        response.data.results.length > 0
-      ) {
-        const latestData = response.data.results[0];
-        return { symbol: symbols[index], price: latestData.c };
-      } else {
-        throw new Error(`Unexpected response for ${symbols[index]}`);
+          if (response.data && response.data["Time Series (1min)"]) {
+            const latestTime = Object.keys(
+              response.data["Time Series (1min)"]
+            )[0];
+            const latestData = response.data["Time Series (1min)"][latestTime];
+            stockData.push({ symbol, price: latestData["1. open"] });
+          } else {
+            console.error(`Unexpected response for ${symbol}`);
+            stockData.push({ symbol, price: "N/A" });
+          }
+
+          // Add delay between API calls to avoid rate limiting
+          await delay(15000); // 15 seconds delay to stay within rate limits
+        } catch (error) {
+          console.error(`Error fetching data for ${symbol}:`, error.message);
+          stockData.push({ symbol, price: "N/A" });
+        }
       }
-    });
 
-    res.json(stockData);
+      // Make API call for gold price
+      const goldPricePromise = axios.get("https://www.goldapi.io/api/XAU/USD", {
+        headers: {
+          "x-access-token": goldApiKey,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const goldResponse = await goldPricePromise;
+
+      let goldData = null;
+      if (goldResponse.data && typeof goldResponse.data.price === "number") {
+        const goldPrice = parseFloat(goldResponse.data.price);
+        if (!isNaN(goldPrice)) {
+          goldData = { symbol: "XAU", price: goldPrice.toFixed(2) };
+          console.log("Gold price fetched:", goldData);
+          stockData.push(goldData);
+        } else {
+          console.error("Invalid gold price value received.");
+        }
+      } else {
+        console.error("Unexpected response from GoldAPI", goldResponse.data);
+      }
+
+      console.log("Stock and gold data fetched successfully:", stockData);
+
+      // Insert stock and gold data into the MySQL database using Promise.all
+      const dbPromises = stockData
+        .filter((stock) => stock.price !== "N/A")
+        .map((stock) => {
+          return new Promise((resolve, reject) => {
+            const query = `INSERT INTO stocks (symbol, price, date_added) VALUES (?, ?, NOW()) ON DUPLICATE KEY UPDATE price = ?, date_added = NOW()`;
+            db.query(
+              query,
+              [stock.symbol, stock.price, stock.price],
+              (err, result) => {
+                if (err) {
+                  console.error("Error inserting or updating stock data:", err);
+                  reject(err);
+                } else {
+                  console.log(
+                    `Stock data upserted for ${stock.symbol}:`,
+                    result
+                  );
+                  resolve(result);
+                }
+              }
+            );
+          });
+        });
+
+      await Promise.all(dbPromises);
+      console.log("Stock data successfully updated in database.");
+    }
   } catch (error) {
     console.error("Error fetching stock data:", error.message);
-    res.status(500).json({ error: "Error fetching stock data" });
   }
-});
+};
 
-// Route to get gold price data from GoldAPI.io
-app.get("/api/gold-price", async (req, res) => {
-  try {
-    const apiKey = process.env.GOLD_API_KEY; // Your GoldAPI.io key
+// Helper function to add delay
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-    const response = await axios.get("https://www.goldapi.io/api/XAU/USD", {
-      headers: {
-        "x-access-token": apiKey,
-        "Content-Type": "application/json",
-      },
-    });
+// Call the function every 1 minute (60000 milliseconds)
+setInterval(scheduleStockUpdate, 60000);
 
-    if (response.data && response.data.price) {
-      res.json({ goldPrice: response.data.price });
+// Route to get saved stock and gold data from the database
+app.get("/api/saved-stocks", (req, res) => {
+  const query = `SELECT symbol, price, date_added FROM stocks ORDER BY date_added DESC`;
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error("Error fetching stock data from database:", err);
+      res
+        .status(500)
+        .json({ error: "Error fetching stock data from database" });
     } else {
-      console.error("Unexpected response from GoldAPI", response.data);
-      res.status(500).json({ error: "Unexpected response from GoldAPI" });
+      res.json(results);
     }
-  } catch (error) {
-    console.error("Error fetching gold price:", error.message);
-    res.status(500).json({ error: "Error fetching gold price" });
-  }
+  });
 });
 
 // Route to get traffic status (example)
@@ -177,6 +221,14 @@ app.get("/api/events", (req, res) => {
     { title: "Doctor's Appointment", time: "2:00 PM" },
   ];
   res.json(events);
+});
+
+app.get("/api/appointments", (req, res) => {
+  const appointments = [
+    { title: "Dentist Appointment", time: "3:00 PM" },
+    { title: "Client Meeting", time: "4:30 PM" },
+  ];
+  res.json(appointments);
 });
 
 // Start server
