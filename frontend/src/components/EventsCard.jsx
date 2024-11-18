@@ -1,10 +1,46 @@
-import React from "react";
+// EventsCard.jsx
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { Card, List, Typography } from "antd";
-import eventImage from "/Users/mah/Desktop/NewProjectFolder/InfoDisplay/frontend/src/assets/images/Bayti-less_2_11zon.webp"; // Corrected import
+import eventImage from "/Users/mah/Desktop/NewProjectFolder/InfoDisplay/frontend/src/assets/images/Bayti-less_2_11zon.webp";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
-function EventsCard({ events, appointments }) {
+function EventsCard() {
+  const [events, setEvents] = useState([]);
+  const [appointments, setAppointments] = useState([]);
+
+  useEffect(() => {
+    const fetchEventsAndAppointments = () => {
+      // Fetch events
+      axios
+        .get("http://localhost:5050/api/events")
+        .then((res) => {
+          setEvents(res.data);
+        })
+        .catch((error) => {
+          console.error("Error fetching events:", error);
+        });
+
+      // Fetch appointments
+      axios
+        .get("http://localhost:5050/api/appointments")
+        .then((res) => {
+          setAppointments(res.data);
+        })
+        .catch((error) => {
+          console.error("Error fetching appointments:", error);
+        });
+    };
+
+    // Fetch data initially and set interval
+    fetchEventsAndAppointments();
+    const eventsInterval = setInterval(fetchEventsAndAppointments, 65000); // Update every 1:05 minutes
+
+    // Clean up interval on component unmount
+    return () => clearInterval(eventsInterval);
+  }, []);
+
   // Merge events and appointments
   const mergedEvents = [...events, ...appointments];
 
@@ -19,19 +55,13 @@ function EventsCard({ events, appointments }) {
       }}
     >
       <div style={{ textAlign: "center", marginBottom: "20px" }}>
-        <Title
-          level={3}
-          style={{ color: "#ffffff", fontSize: "24px", marginBottom: "10px" }}
-        >
-          Appointments & Events
-        </Title>
         <img
           src={eventImage}
           alt="Event"
           style={{
-            width: "90%", // Adjust to make it fit better
+            width: "90%",
             height: "auto",
-            maxHeight: "300px", // Limit height for better alignment
+            maxHeight: "300px",
             objectFit: "cover",
             borderRadius: "10px",
           }}
