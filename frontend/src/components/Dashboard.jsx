@@ -11,7 +11,7 @@ function Dashboard() {
     <ConfigProvider theme={{ algorithm: theme.darkAlgorithm }}>
       <div
         style={{
-          padding: "40px",
+          padding: "10px",
           backgroundColor: "#141414",
           color: "#ffffff",
           minHeight: "100vh",

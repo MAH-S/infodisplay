@@ -22,7 +22,7 @@ function DashboardLayout() {
           <StockCard />
         </div>
         <div style={{ marginBottom: "20px" }}>
-          <TrafficCard />
+          <AppointmentsCard />
         </div>
       </Col>
 
@@ -46,7 +46,7 @@ function DashboardLayout() {
           <PrayerTimesCard />
         </div>
         <div style={{ marginBottom: "20px" }}>
-          <AppointmentsCard />
+          <TrafficCard />
         </div>
       </Col>
     </Row>

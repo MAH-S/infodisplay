@@ -12,7 +12,9 @@ const stockRoutes = require("./routes/stockRoutes");
 const weatherRoutes = require("./routes/weatherRoutes");
 const trafficRoutes = require("./routes/trafficRoutes");
 const timeRoutes = require("./routes/timeRoutes");
-const stockController = require("./controllers/stockController");
+
+// Import stockService to schedule updates
+const stockService = require("./services/stockService"); // Import stockService
 
 // CORS Middleware with explicit origin
 app.use(
@@ -32,7 +34,9 @@ app.use("/api", trafficRoutes);
 app.use("/api", timeRoutes);
 
 // Schedule stock updates every 1 minute
-setInterval(stockController.scheduleStockUpdate, 60000);
+setInterval(() => {
+  stockService.scheduleStockUpdate();
+}, 60000);
 
 // Start server
 app.listen(PORT, () => {
