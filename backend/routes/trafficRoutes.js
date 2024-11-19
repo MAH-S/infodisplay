@@ -5,6 +5,11 @@ const router = express.Router();
 const trafficController = require("../controllers/trafficController");
 
 // Route to get traffic status
-router.get("/traffic", trafficController.getTrafficStatus);
+router.get("/traffic", trafficController.getTrafficData);
 
 module.exports = router;
+
+const trafficRoutes = require("./routes/trafficRoutes");
+app.use("/api", trafficRoutes);
+
+
