@@ -8,8 +8,3 @@ const trafficController = require("../controllers/trafficController");
 router.get("/traffic", trafficController.getTrafficData);
 
 module.exports = router;
-
-const trafficRoutes = require("./routes/trafficRoutes");
-app.use("/api", trafficRoutes);
-
-
