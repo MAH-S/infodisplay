@@ -1,12 +1,11 @@
-// dbConnection.js
 const mysql = require("mysql2");
 
 // Create a connection to the database
 const db = mysql.createConnection({
-  host: "127.0.0.1", // Your database host
-  user: "root", // Your MySQL username
-  password: "123456789", // Your MySQL password
-  database: "stock_data", // The database name
+  host: process.env.DB_HOST || "my-mysql-container", // use environment variables for config
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASSWORD || "123456789",
+  database: process.env.DB_NAME || "stock_data",
 });
 
 // Connect to MySQL
@@ -18,4 +17,4 @@ db.connect((err) => {
   console.log("Connected to MySQL database");
 });
 
-module.exports = db; // Export the db connection
+module.exports = db;

@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: my-mysql-image
+    container_name: my-mysql-container
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456789
+      MYSQL_DATABASE: stock_data
+    volumes:
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+      - mysql_data:/var/lib/mysql  # Add a volume to persist MySQL data
+    networks:
+      - my-network
+    ports:
+      - "3306:3306"
+    restart: always
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile  # Explicitly mention Dockerfile name if not default
+    container_name: backend-container
+    depends_on:
+      - mysql
+    environment:
+      DB_HOST: my-mysql-container  # Use the name of the MySQL service
+      DB_USER: root
+      DB_PASSWORD: 123456789
+      DB_NAME: stock_data
+    networks:
+      - my-network
+    ports:
+      - "5050:5050"
+    restart: always
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile  # Explicitly mention Dockerfile name if not default
+    container_name: frontend-container
+    depends_on:
+      - backend
+    networks:
+      - my-network
+    ports:
+      - "3000:3000"
+    restart: always
+
+networks:
+  my-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local

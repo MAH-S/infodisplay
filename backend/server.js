@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const db = require("./dbConnection"); // Import the MySQL connection
 
 const app = express();
 const PORT = process.env.PORT || 5050;
@@ -51,3 +52,19 @@ setInterval(() => {
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+// Function to retry connecting to the database
+function connectWithRetry() {
+  db.connect((err) => {
+    if (err) {
+      console.error("Error connecting to the database:", err);
+      console.log("Retrying in 5 seconds...");
+      setTimeout(connectWithRetry, 5000); // Retry after 5 seconds
+    } else {
+      console.log("Connected to MySQL database");
+    }
+  });
+}
+
+// Connect to the database with retry logic
+connectWithRetry();

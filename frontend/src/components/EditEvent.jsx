@@ -145,7 +145,6 @@ const EditEvent = () => {
             <Form.Item
               label={<span style={{ color: "#ffffff" }}>Time</span>}
               name="time"
-              rules={[{ required: true, message: "Please input the event time!" }]}
               labelAlign="left"
             >
               <Input
