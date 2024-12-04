@@ -9,6 +9,7 @@ services:
       MYSQL_DATABASE: stock_data
     volumes:
       - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql  # Add the user creation script
       - mysql_data:/var/lib/mysql  # Add a volume to persist MySQL data
     networks:
       - my-network
@@ -25,7 +26,7 @@ services:
       - mysql
     environment:
       DB_HOST: my-mysql-container  # Use the name of the MySQL service
-      DB_USER: root
+      DB_USER: bend  # Use the new non-root user
       DB_PASSWORD: 123456789
       DB_NAME: stock_data
     networks:

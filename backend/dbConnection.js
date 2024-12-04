@@ -3,8 +3,8 @@ const mysql = require("mysql2");
 // Create a connection to the database
 const db = mysql.createConnection({
   host: process.env.DB_HOST || "my-mysql-container", // use environment variables for config
-  user: process.env.DB_USER || "root",
-  password: process.env.DB_PASSWORD || "123456789",
+  user: process.env.DB_USER || "bend",              // Use the new user
+  password: process.env.DB_PASSWORD || "123456789", // Use the new password
   database: process.env.DB_NAME || "stock_data",
 });
 

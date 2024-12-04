@@ -33,7 +33,11 @@ CREATE TABLE IF NOT EXISTS stocks (
   PRIMARY KEY (id)
 );
 
--- Create a new MySQL user named 'host' with password '123443231'
-CREATE USER IF NOT EXISTS 'host'@'%' IDENTIFIED BY '123443231';
-GRANT ALL PRIVILEGES ON stock_data.* TO 'host'@'%';
+-- Create a new user
+CREATE USER 'bend'@'%' IDENTIFIED BY '123456789';
+
+-- Grant all privileges on the database
+GRANT ALL PRIVILEGES ON stock_data.* TO 'bend'@'%';
+
+-- Apply changes
 FLUSH PRIVILEGES;
