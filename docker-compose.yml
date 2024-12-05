@@ -1,40 +1,49 @@
 version: '3.8'
-
+ 
 services:
   mysql:
-    image: my-mysql-image
+    image: mysql
     container_name: my-mysql-container
     environment:
       MYSQL_ROOT_PASSWORD: 123456789
       MYSQL_DATABASE: stock_data
+      MYSQL_USER: bend
+      MYSQL_PASSWORD: 123456789
     volumes:
-      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql  # Add the user creation script
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
       - mysql_data:/var/lib/mysql  # Add a volume to persist MySQL data
     networks:
       - my-network
     ports:
       - "3306:3306"
     restart: always
-
+    healthcheck:  # إضافة فحص صحي
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+ 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile  # Explicitly mention Dockerfile name if not default
     container_name: backend-container
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     environment:
-      DB_HOST: my-mysql-container  # Use the name of the MySQL service
-      DB_USER: bend  # Use the new non-root user
-      DB_PASSWORD: 123456789
-      DB_NAME: stock_data
+      - DB_HOST=my-mysql-container
+      - DB_USER=bend
+      - DB_PASSWORD=123456789
+      - DB_DATABASE=stock_data
     networks:
       - my-network
     ports:
       - "5050:5050"
     restart: always
-
+ 
   frontend:
     build:
       context: ./frontend
@@ -47,11 +56,11 @@ services:
     ports:
       - "3000:3000"
     restart: always
-
+ 
 networks:
   my-network:
     driver: bridge
-
+ 
 volumes:
   mysql_data:
     driver: local

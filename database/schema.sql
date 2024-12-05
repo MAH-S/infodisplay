@@ -1,5 +1,4 @@
 -- Combined Schema for `appointments`, `events`, and `stocks` tables
-
 -- Schema for `appointments` table
 CREATE TABLE IF NOT EXISTS appointments (
   id INT NOT NULL AUTO_INCREMENT,
@@ -32,12 +31,3 @@ CREATE TABLE IF NOT EXISTS stocks (
   direction ENUM('up', 'down', 'same') DEFAULT 'same',
   PRIMARY KEY (id)
 );
-
--- Create a new user
-CREATE USER 'bend'@'%' IDENTIFIED BY '123456789';
-
--- Grant all privileges on the database
-GRANT ALL PRIVILEGES ON stock_data.* TO 'bend'@'%';
-
--- Apply changes
-FLUSH PRIVILEGES;
