@@ -8,11 +8,12 @@ const { Text } = Typography;
 function TimeCard() {
   const [time, setTime] = useState("");
   const [date, setDate] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchTime = () => {
       axios
-        .get("http://localhost:5050/api/time")
+        .get("http://backend-container:5050/api/time")
         .then((res) => {
           setTime(res.data.currentTime);
           const currentDate = new Date();
@@ -24,9 +25,11 @@ function TimeCard() {
               day: "numeric",
             })
           );
+          setError(""); // Clear any previous errors on success
         })
         .catch((error) => {
           console.error("Error fetching time:", error);
+          setError("Failed to fetch time. Please try again later.");
         });
     };
 
@@ -41,13 +44,23 @@ function TimeCard() {
   return (
     <Card
       bordered={true}
-      style={{ backgroundColor: "#1f1f1f", textAlign: "center" }}
+      style={{
+        backgroundColor: "#1f1f1f",
+        textAlign: "center",
+        padding: "20px",
+      }}
     >
-      <Text style={{ color: "#ffffff", fontSize: "20px" }}>{date}</Text>
-      <br />
-      <Text style={{ color: "#ffffff", fontSize: "24px" }}>
-        {time || "Loading..."}
-      </Text>
+      {error ? (
+        <Text style={{ color: "#ff4d4f", fontSize: "18px" }}>{error}</Text>
+      ) : (
+        <>
+          <Text style={{ color: "#ffffff", fontSize: "20px" }}>{date}</Text>
+          <br />
+          <Text style={{ color: "#ffffff", fontSize: "24px" }}>
+            {time || "Loading..."}
+          </Text>
+        </>
+      )}
     </Card>
   );
 }
