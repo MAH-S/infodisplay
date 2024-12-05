@@ -22,7 +22,7 @@ const stockService = require("./services/stockService");
 // CORS Middleware with explicit origin
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: process.env.FRONTEND_URL || "http://frontend-container:3000", // Update origin for Docker network
     optionsSuccessStatus: 200,
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -49,7 +49,7 @@ setInterval(() => {
 }, 60000);
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => { // Listen on all network interfaces
   console.log(`Server running on port ${PORT}`);
 });
 
