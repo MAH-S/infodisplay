@@ -19,17 +19,16 @@ const eventRouter = require("./routes/eventRouter"); // Import eventRouter
 // Import stockService to schedule updates
 const stockService = require("./services/stockService");
 
+
 // CORS Middleware with explicit origin
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://frontend-container:3000", // Update origin for Docker network
-    optionsSuccessStatus: 200,
+    origin: process.env.FRONTEND_URL || "http://95.177.217.236", // Use environment variable or specific IP
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true, // Allow credentials (cookies, HTTP auth, etc.)
+    allowedHeaders: ["Content-Type", "Authorization"], // Specify allowed headers
   })
 );
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 // Serve static files from the uploads directory
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
