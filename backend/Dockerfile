@@ -1,16 +1,17 @@
-FROM node:alpine
+# Use a specific version of Node.js for consistency
+FROM node:18-alpine
 
-# Install required packages
-RUN apk add --no-cache mysql-client mariadb-connector-c mariadb-connector-c-dev bash
-
-# Set working directory
+# Set the working directory inside the container
 WORKDIR /app
 
-# Copy backend files
-COPY . .
+# Copy package.json and package-lock.json to leverage Docker cache
+COPY package*.json ./
 
-# Install Node.js dependencies
+# Install dependencies
 RUN npm install
+
+# Copy the rest of the application files
+COPY . .
 
 # Expose the application port
 EXPOSE 5050

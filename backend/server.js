@@ -23,7 +23,7 @@ const stockService = require("./services/stockService");
 // CORS Middleware with explicit origin
 app.use(
   cors({
-    origin: ["http://frontend-container:3000", "http://95.177.217.236"], // Add frontend container and public IP
+    origin: ["http://localhost:3000"], // Add frontend container and public IP
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     credentials: true, // Allow credentials (cookies, HTTP auth, etc.)
     allowedHeaders: ["Content-Type", "Authorization"], // Specify allowed headers

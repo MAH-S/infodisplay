@@ -13,7 +13,7 @@ function TimeCard() {
   useEffect(() => {
     const fetchTime = () => {
       axios
-        .get("http://backend-container:5050/api/time")
+        .get("http://localhost:5050/api/time")
         .then((res) => {
           setTime(res.data.currentTime);
           const currentDate = new Date();
@@ -28,7 +28,7 @@ function TimeCard() {
           setError(""); // Clear any previous errors on success
         })
         .catch((error) => {
-          console.error("Error fetching time:", error);
+          console.error("Error fetching time:", error.message);
           setError("Failed to fetch time. Please try again later.");
         });
     };

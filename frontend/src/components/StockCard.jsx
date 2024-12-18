@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Card, List, Typography } from "antd";
+import { Typography } from "antd";
 import { FaApple, FaAmazon, FaGoogle, FaMicrosoft, FaCoins } from "react-icons/fa";
 import { SiNvidia } from "react-icons/si";
+import './StockCard.css'; // Import your custom styles
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 function StockCard() {
   const [stocks, setStocks] = useState([]);
@@ -14,7 +15,7 @@ function StockCard() {
       axios
         .get("http://localhost:5050/api/saved-stocks")
         .then((res) => {
-          setStocks(res.data.slice(0, 7)); // Get the latest 7 stocks, including STC if applicable
+          setStocks(res.data.slice(0, 7)); // Get the latest 7 stocks
         })
         .catch((error) => {
           console.error("Error fetching stocks:", error);
@@ -25,7 +26,7 @@ function StockCard() {
     fetchStocks();
 
     // Set interval to refresh every 1 minute
-    const interval = setInterval(fetchStocks, 60000); // Fetch data every minute
+    const interval = setInterval(fetchStocks, 60000);
 
     // Clean up interval on component unmount
     return () => clearInterval(interval);
@@ -47,47 +48,39 @@ function StockCard() {
   const getIcon = (symbol) => {
     switch (symbol) {
       case "AAPL":
-        return <FaApple style={{ color: "white" }} />;
+        return <FaApple className="stock-icon" />;
       case "AMZN":
-        return <FaAmazon style={{ color: "white" }} />;
+        return <FaAmazon className="stock-icon" />;
       case "GOOGL":
-        return <FaGoogle style={{ color: "white" }} />;
+        return <FaGoogle className="stock-icon" />;
       case "MSFT":
-        return <FaMicrosoft style={{ color: "white" }} />;
+        return <FaMicrosoft className="stock-icon" />;
       case "NVDA":
-        return <SiNvidia style={{ color: "white" }} />;
+        return <SiNvidia className="stock-icon" />;
       case "Gold":
-        return <FaCoins style={{ color: "gold" }} />;
+        return <FaCoins className="stock-icon gold-icon" />;
       case "STC":
-        return <span style={{ color: "white" }}>🟢</span>; // Placeholder for STC, use an icon if available
+        return <span className="stock-icon">🟢</span>;
       default:
         return null;
     }
   };
 
   return (
-    <Card bordered={true} style={{ backgroundColor: "#1f1f1f" }}>
-      <Title level={3} style={{ color: "#ffffff", fontSize: "24px" }}>
-        Stock Market Data
-      </Title>
-      {stocks.length > 0 ? (
-        <List
-          dataSource={stocks}
-          renderItem={(stock) => (
-            <List.Item>
-              <Text style={{ color: "#ffffff", fontSize: "18px" }}>
-                {getIcon(stock.symbol)} {stock.symbol === "GC=F" ? "Gold" : stock.symbol}: {stock.price}{" "}
-                {getDirectionSymbol(stock.direction)}
-              </Text>
-            </List.Item>
-          )}
-        />
-      ) : (
-        <Text style={{ color: "#ffffff", fontSize: "18px" }}>
-          Loading stock market data...
-        </Text>
-      )}
-    </Card>
+    <div className="stock-ticker-container">
+      <div className="stock-ticker">
+        {stocks.length > 0 ? (
+          stocks.map((stock, index) => (
+            <span key={index} className="stock-ticker-item">
+              {getIcon(stock.symbol)} {stock.symbol === "GC=F" ? "Gold" : stock.symbol}: {stock.price}{" "}
+              {getDirectionSymbol(stock.direction)}
+            </span>
+          ))
+        ) : (
+          <Text className="stock-ticker-loading">Loading stock market data...</Text>
+        )}
+      </div>
+    </div>
   );
 }
 

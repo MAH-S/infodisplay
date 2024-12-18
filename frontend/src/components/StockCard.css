@@ -1,0 +1,37 @@
+.stock-ticker-container {
+    background-color: #1f1f1f;
+    padding: 10px 0;
+    overflow: hidden;
+    white-space: nowrap;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    z-index: 1000;
+  }
+  
+  .stock-ticker {
+    display: inline-block;
+    animation: scroll 30s linear infinite;
+  }
+  
+  .stock-ticker-item {
+    color: #ffffff;
+    font-size: 18px;
+    margin-right: 20px;
+    display: inline-block;
+  }
+  
+  .stock-ticker-loading {
+    color: #ffffff;
+    font-size: 18px;
+  }
+  
+  @keyframes scroll {
+    0% {
+      transform: translateX(100%);
+    }
+    100% {
+      transform: translateX(-100%);
+    }
+  }
+  
