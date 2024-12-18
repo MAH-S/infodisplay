@@ -31,3 +31,13 @@ CREATE TABLE IF NOT EXISTS stocks (
   direction ENUM('up', 'down', 'same') DEFAULT 'same',
   PRIMARY KEY (id)
 );
+
+CREATE TABLE schedule (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255),
+    shift_time VARCHAR(50), -- Exact time range (e.g., 7AM-3PM)
+    period VARCHAR(20),     -- Morning, Evening, or Night
+    date DATE,              -- Date of the shift
+    working BOOLEAN,        -- TRUE if working, FALSE otherwise
+    on_vacation BOOLEAN     -- TRUE if on vacation
+);
