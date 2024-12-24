@@ -19,6 +19,17 @@ const eventRouter = require("./routes/eventRouter"); // Import eventRouter
 // Import stockService to schedule updates
 const stockService = require("./services/stockService");
 
+// Middleware to allow requests only from a specific IP
+app.use((req, res, next) => {
+  const allowedIP = "95.177.217.236"; // Replace with the allowed IP address
+  const clientIP = req.ip; // Express automatically detects the client IP
+
+  if (clientIP === allowedIP || clientIP === "::ffff:" + allowedIP) {
+    next(); // Allow the request
+  } else {
+    res.status(403).send("Access Denied: Your IP is not allowed.");
+  }
+});
 
 // CORS Middleware with explicit origin
 app.use(
