@@ -12,7 +12,7 @@ function EventsCard() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const response = await axios.get("http://localhost:5050/api/events");
+        const response = await axios.get("http://95.177.217.236/api/events");
         // Duplicate events to create a continuous scroll effect
         setEvents([...response.data, ...response.data]);
         setLoading(false);
@@ -51,7 +51,7 @@ function EventsCard() {
               <div key={index} className="scrolling-item">
                 {event.image && (
                   <img
-                    src={`http://localhost:5050/uploads/${event.image}`}
+                    src={`http://95.177.217.236/uploads/${event.image}`}
                     alt={event.title}
                     className="scrolling-image"
                   />

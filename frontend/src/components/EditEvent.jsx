@@ -55,7 +55,7 @@ const EditEvent = () => {
 
     // Send form data to backend API
     axios
-      .post("http://localhost:5050/api/events", formData, {
+      .post("http://95.177.217.236/api/events", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },

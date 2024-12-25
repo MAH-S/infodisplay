@@ -10,7 +10,7 @@ function PrayerTimesCard() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:5050/api/prayer-times")
+      .get("http://95.177.217.236/api/prayer-times")
       .then((res) => {
         setPrayerTimes(res.data);
       })

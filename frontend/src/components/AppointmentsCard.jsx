@@ -11,7 +11,7 @@ function AppointmentsCard() {
   useEffect(() => {
     const fetchAppointments = () => {
       axios
-        .get("http://localhost:5050/api/appointments")
+        .get("http://95.177.217.236/api/appointments")
         .then((res) => {
           setAppointments(res.data);
         })

@@ -15,8 +15,8 @@ function ManageEvents() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const eventsResponse = await axios.get("http://localhost:5050/api/events");
-        const appointmentsResponse = await axios.get("http://localhost:5050/api/appointments");
+        const eventsResponse = await axios.get("http://95.177.217.236/api/events");
+        const appointmentsResponse = await axios.get("http://95.177.217.236/api/appointments");
         setEvents(eventsResponse.data);
         setAppointments(appointmentsResponse.data);
         setLoading(false);
@@ -41,10 +41,10 @@ function ManageEvents() {
   const handleDelete = async (id, type) => {
     try {
       if (type === "event") {
-        await axios.delete(`http://localhost:5050/api/events/${id}`);
+        await axios.delete(`http://95.177.217.236/api/events/${id}`);
         setEvents(events.filter((event) => event.id !== id));
       } else {
-        await axios.delete(`http://localhost:5050/api/appointments/${id}`);
+        await axios.delete(`http://95.177.217.236/api/appointments/${id}`);
         setAppointments(appointments.filter((appointment) => appointment.id !== id));
       }
       message.success("Deleted successfully!");
@@ -59,7 +59,7 @@ function ManageEvents() {
     try {
       if (editingAppointment) {
         // Update Appointment
-        await axios.put(`http://localhost:5050/api/appointments/${editingAppointment.id}`, values);
+        await axios.put(`http://95.177.217.236/api/appointments/${editingAppointment.id}`, values);
         setAppointments(
           appointments.map((appointment) =>
             appointment.id === editingAppointment.id ? { ...appointment, ...values } : appointment
@@ -67,7 +67,7 @@ function ManageEvents() {
         );
       } else {
         // Add New Appointment
-        await axios.post("http://localhost:5050/api/appointments", values);
+        await axios.post("http://95.177.217.236/api/appointments", values);
         setAppointments([...appointments, values]);
         message.success("Appointment added successfully!");
       }

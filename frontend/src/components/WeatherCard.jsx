@@ -11,7 +11,7 @@ function WeatherCard() {
   useEffect(() => {
     const fetchWeather = () => {
       axios
-        .get("http://localhost:5050/api/weather")
+        .get("http://95.177.217.236/api/weather")
         .then((res) => {
           setWeather(res.data);
         })

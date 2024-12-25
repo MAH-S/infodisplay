@@ -13,7 +13,7 @@ function StockCard() {
   useEffect(() => {
     const fetchStocks = () => {
       axios
-        .get("http://localhost:5050/api/saved-stocks")
+        .get("http://95.177.217.236/api/saved-stocks")
         .then((res) => {
           setStocks(res.data.slice(0, 7)); // Get the latest 7 stocks
         })
