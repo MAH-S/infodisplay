@@ -22,7 +22,7 @@ const stockService = require("./services/stockService");
 // Middleware to allow requests only from a specific IP
 app.use((req, res, next) => {
   const allowedIP = "95.177.217.236"; // Replace with the allowed IP address
-  const clientIP = req.ip; // Express automatically detects the client IP
+  const clientIP = req.headers["x-forwarded-for"] || req.ip; // Check X-Forwarded-For or req.ip
 
   if (clientIP === allowedIP || clientIP === "::ffff:" + allowedIP) {
     next(); // Allow the request
@@ -34,7 +34,7 @@ app.use((req, res, next) => {
 // CORS Middleware with explicit origin
 app.use(
   cors({
-    origin: ["http://localhost:3000"], // Add frontend container and public IP
+    origin: ["http://localhost:3000", "http://95.177.217.236"], // Add frontend container and public IP
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     credentials: true, // Allow credentials (cookies, HTTP auth, etc.)
     allowedHeaders: ["Content-Type", "Authorization"], // Specify allowed headers
