@@ -11,9 +11,8 @@ function TimeCard() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
-  // Dynamically determine the API base URL
-  const API_BASE_URL =
-    process.env.REACT_APP_API_URL || "http://95.177.217.236:5050";
+  // Use the public IP of the backend server
+  const API_BASE_URL = "http://95.177.217.236:5050";
 
   useEffect(() => {
     const fetchTime = () => {
