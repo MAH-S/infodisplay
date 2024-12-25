@@ -19,28 +19,11 @@ const eventRouter = require("./routes/eventRouter"); // Import eventRouter
 // Import stockService to schedule updates
 const stockService = require("./services/stockService");
 
-// Middleware to allow requests only from specific IPs
+// Middleware to allow requests from all IPs
 app.use((req, res, next) => {
-  const allowedIPs = [
-    "95.177.217.236", // Your server's public IP
-    "127.0.0.1",      // Localhost (IPv4)
-    "::1",            // Localhost (IPv6)
-  ];
-
-  // Extract the client IP (account for reverse proxies)
   const clientIP = req.headers["x-forwarded-for"] || req.ip;
-
-  // Check if the client IP is explicitly allowed
-  if (
-    allowedIPs.includes(clientIP) ||                  // Direct match
-    clientIP.startsWith("::ffff:") &&                 // IPv4-mapped IPv6 support
-    allowedIPs.includes(clientIP.replace("::ffff:", ""))
-  ) {
-    next(); // Allow the request
-  } else {
-    console.warn(`Blocked request from IP: ${clientIP}`);
-    res.status(403).send("Access Denied: Your IP is not allowed.");
-  }
+  console.log(`Request received from IP: ${clientIP}`);
+  next(); // Allow all requests
 });
 
 // CORS Middleware with explicit origin
