@@ -12,7 +12,7 @@ function TimeCard() {
   const [loading, setLoading] = useState(true);
 
   // Use the public IP of the backend server
-  const API_BASE_URL = "http://95.177.217.236:5050";
+  const API_BASE_URL = "http://95.177.217.236";
 
   useEffect(() => {
     const fetchTime = () => {
