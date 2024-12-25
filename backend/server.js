@@ -16,8 +16,9 @@ const trafficRoutes = require("./routes/trafficRoutes");
 const timeRoutes = require("./routes/timeRoutes");
 const eventRouter = require("./routes/eventRouter"); // Import eventRouter
 
-// Import stockService to schedule updates
-const stockService = require("./services/stockService");
+// Middleware to parse JSON and URL-encoded data
+app.use(express.json()); // Parse JSON payloads
+app.use(express.urlencoded({ extended: true })); // Parse URL-encoded payloads
 
 // Middleware to allow requests from all IPs
 app.use((req, res, next) => {
@@ -35,7 +36,6 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"], // Specify allowed headers
   })
 );
-
 
 // Serve static files from the uploads directory
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
