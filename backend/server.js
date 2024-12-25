@@ -19,14 +19,26 @@ const eventRouter = require("./routes/eventRouter"); // Import eventRouter
 // Import stockService to schedule updates
 const stockService = require("./services/stockService");
 
-// Middleware to allow requests only from a specific IP
+// Middleware to allow requests only from specific IPs
 app.use((req, res, next) => {
-  const allowedIP = "95.177.217.236"; // Replace with the allowed IP address
-  const clientIP = req.headers["x-forwarded-for"] || req.ip; // Check X-Forwarded-For or req.ip
+  const allowedIPs = [
+    "95.177.217.236", // Your server's public IP
+    "127.0.0.1",      // Localhost (IPv4)
+    "::1",            // Localhost (IPv6)
+  ];
 
-  if (clientIP === allowedIP || clientIP === "::ffff:" + allowedIP) {
+  // Extract the client IP (account for reverse proxies)
+  const clientIP = req.headers["x-forwarded-for"] || req.ip;
+
+  // Check if the client IP is explicitly allowed
+  if (
+    allowedIPs.includes(clientIP) ||                  // Direct match
+    clientIP.startsWith("::ffff:") &&                 // IPv4-mapped IPv6 support
+    allowedIPs.includes(clientIP.replace("::ffff:", ""))
+  ) {
     next(); // Allow the request
   } else {
+    console.warn(`Blocked request from IP: ${clientIP}`);
     res.status(403).send("Access Denied: Your IP is not allowed.");
   }
 });
@@ -34,12 +46,13 @@ app.use((req, res, next) => {
 // CORS Middleware with explicit origin
 app.use(
   cors({
-    origin: ["http://localhost:3000", "http://95.177.217.236", "127.0.0.1", "::1"], // Add frontend container and public IP
+    origin: ["http://localhost:3000", "http://95.177.217.236"], // Allow frontend and public IP
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     credentials: true, // Allow credentials (cookies, HTTP auth, etc.)
     allowedHeaders: ["Content-Type", "Authorization"], // Specify allowed headers
   })
 );
+
 
 // Serve static files from the uploads directory
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
