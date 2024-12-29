@@ -9,12 +9,14 @@ function TimeCard() {
   const [time, setTime] = useState("");
   const [date, setDate] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
   // Use the public IP of the backend server
   const API_BASE_URL = "http://95.177.217.236";
 
   useEffect(() => {
     const fetchTime = () => {
+      setLoading(true);
       axios
         .get(`${API_BASE_URL}/api/time`)
         .then((res) => {
@@ -28,18 +30,19 @@ function TimeCard() {
               day: "numeric",
             })
           );
-          setError(""); // Clear any previous errors
+          setError("");
         })
         .catch((error) => {
           console.error("Error fetching time:", error.message);
-          setError("Failed to fetch time. Please check your connection.");
+          setError("Failed to fetch time. Please try again later.");
+        })
+        .finally(() => {
+          setLoading(false);
         });
     };
 
-    // Initial fetch and setup interval
     fetchTime();
     const timeInterval = setInterval(fetchTime, 60000);
-
     return () => clearInterval(timeInterval);
   }, [API_BASE_URL]);
 
@@ -54,16 +57,16 @@ function TimeCard() {
         boxShadow: "0px 4px 8px rgba(0,0,0,0.2)",
       }}
     >
-      {error ? (
+      {loading ? (
+        <Text style={{ color: "#ffffff", fontSize: "24px" }}>Loading...</Text>
+      ) : error ? (
         <Text style={{ color: "#ff4d4f", fontSize: "18px" }}>{error}</Text>
-      ) : time && date ? (
+      ) : (
         <>
           <Text style={{ color: "#ffffff", fontSize: "20px" }}>{date}</Text>
           <br />
           <Text style={{ color: "#ffffff", fontSize: "24px" }}>{time}</Text>
         </>
-      ) : (
-        <Text style={{ color: "#ffffff", fontSize: "24px" }}>Loading...</Text>
       )}
     </Card>
   );
