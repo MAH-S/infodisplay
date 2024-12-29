@@ -1,7 +1,7 @@
 import React from "react";
 import { Row, Col } from "antd";
 import TimeCard from "./TimeCard";
-import DigitalOppressionCard from "./DigitalOppressionCard";
+import DigitalOperationCard from "./DigitalOperationCard";
 import WeatherCard from "./WeatherCard";
 import StockCard from "./StockCard";
 import EventsCard from "./EventsCard";
@@ -24,7 +24,7 @@ function DashboardLayout() {
 
         <Col span={12}>
           <div style={{ marginBottom: "20px" }}>
-            <DigitalOppressionCard />
+            <DigitalOperationCard />
           </div>
           <div style={{ marginBottom: "20px" }}>
             <EventsCard />

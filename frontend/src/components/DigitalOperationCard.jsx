@@ -17,7 +17,7 @@ function DigitalOppressionCard() {
       }}
     >
       <Title level={3} style={{ color: "#ffffff", fontSize: "24px", margin: 0 }}>
-        Digital Oppression
+        Digital Operation
       </Title>
     </Card>
   );

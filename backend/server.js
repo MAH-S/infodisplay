@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const db = require("./dbConnection"); // Import the MySQL connection
+const stockService = require("./services/stockService"); // Import stockService
 
 const app = express();
 const PORT = process.env.PORT || 5050;
@@ -55,7 +56,7 @@ setInterval(() => {
 }, 60000);
 
 // Start server
-app.listen(PORT, "0.0.0.0", () => { // Listen on all network interfaces
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);
 });
 
