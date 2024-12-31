@@ -51,35 +51,35 @@ function Dashboard() {
         <DashboardLayout />
 
         {/* Floating Buttons */}
-        <div
+         <div
           style={{
             position: "fixed",
             bottom: 20,
             left: 20,
             zIndex: 1100,
             display: "flex",
-            flexDirection: "column",
+            flexDirection: "row", // Horizontal layout for testing
             gap: "10px",
           }}
         >
-          <FloatButton
-            icon={<EditOutlined />}
-            tooltip={<div>Edit Event</div>}
-            onClick={() => (window.location.href = "/edit-events")} // Replace with correct route
-          />
-          <FloatButton
-            icon={<SettingOutlined />}
-            tooltip={<div>Manage Events & Appointments</div>}
-            onClick={() => (window.location.href = "/manage-events")} // Replace with correct route
-          />
-          <FloatButton
-            icon={<FullscreenOutlined />}
-            tooltip={
-              <div>{isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}</div>
-            }
-            onClick={toggleFullScreen}
-          />
-        </div>
+            <FloatButton
+              icon={<EditOutlined />}
+              tooltip={<div>Edit Event</div>}
+              onClick={() => (window.location.href = "/edit-events")}
+            />
+            <FloatButton
+              icon={<SettingOutlined />}
+              tooltip={<div>Manage Events & Appointments</div>}
+              onClick={() => (window.location.href = "/manage-events")}
+            />
+            <FloatButton
+              icon={<FullscreenOutlined />}
+              tooltip={
+                <div>{isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}</div>
+              }
+              onClick={toggleFullScreen}
+            />
+          </div>
       </div>
     </ConfigProvider>
   );
